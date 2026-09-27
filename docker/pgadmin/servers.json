@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "marathondiary",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "marathondiary",
+      "Username": "marathondiary",
+      "SSLMode": "prefer"
+    }
+  }
+}

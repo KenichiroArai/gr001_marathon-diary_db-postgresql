@@ -11,6 +11,7 @@
 - Maven（`packaging` jar）
 - O/R マッパー: DBFlute 1.3.1（`dbflute-maven-plugin` 1.1.0）
 - DB: PostgreSQL 18.6（Docker）
+- DB 管理ツール: pgAdmin 4 9.18.0（Docker）
 - 基盤ライブラリ: kmg-core / kmg-fund
 
 ## 必要環境
@@ -39,6 +40,20 @@ mvn dbflute:regenerate
 
 接続先（開発用の既定値）: `jdbc:postgresql://localhost:5432/marathondiary`（ユーザ / パスワード: `marathondiary`）
 
+### pgAdmin 4
+
+`docker compose up -d` で pgAdmin 4（9.18.0）も起動する。
+
+1. ブラウザで `http://localhost:5050` を開く
+2. `admin@example.com` / `admin` でログインする（`.env` の `PGADMIN_DEFAULT_*` で変更可）
+3. サーバー `marathondiary` は登録済み（`docker/pgadmin/servers.json`）。初回接続時にパスワード `marathondiary` を入力する
+
+注意:
+
+- pgAdmin から見た接続先ホストは `postgres`（Compose のサービス名）、ポートは `5432`
+- ログイン情報と `servers.json` は `pgadmin-data` ボリュームの初回作成時のみ反映される。変更後は `docker compose down` → `docker volume rm gr001-marathon-diary_pgadmin-data` → `docker compose up -d` で再作成する
+- `.env` で DB 名・ユーザを変えた場合は `docker/pgadmin/servers.json` も合わせる
+
 注意:
 
 - `mvn dbflute:generate` 単体はスキーマ情報（`dbflute_marathondiary/schema/`）が無いと失敗するため、通常は `regenerate` を使う
@@ -60,8 +75,9 @@ mvn package
 ## ディレクトリ構成
 
 ```text
-docker-compose.yml               # PostgreSQL 18.6
+docker-compose.yml               # PostgreSQL 18.6 / pgAdmin 4
 .env.example                     # Docker の接続設定の雛形
+docker/pgadmin/servers.json      # pgAdmin の接続先サーバー定義
 dbflute_marathondiary/           # DBFlute クライアント
   dfprop/                        # DBFlute 設定（basicInfoMap / databaseInfoMap など）
   playsql/replace-schema.sql     # スキーマ定義（DDL）
