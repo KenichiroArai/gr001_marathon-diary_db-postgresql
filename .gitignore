@@ -22,3 +22,34 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Maven
+target/
+
+# Eclipse
+.classpath
+.settings/
+bin/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker（ローカルの接続設定）
+.env
+
+# DBFlute エンジン（mvn dbflute:download で取得する）
+mydbflute/
+
+# DBFlute の実行時生成物
+dbflute_marathondiary/log/*
+!dbflute_marathondiary/log/_readme.txt
+dbflute_marathondiary/output/doc/*
+!dbflute_marathondiary/output/doc/_readme.txt
+dbflute_marathondiary/schema/*
+!dbflute_marathondiary/schema/_readme.txt

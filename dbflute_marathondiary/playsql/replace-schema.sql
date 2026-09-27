@@ -1,0 +1,3 @@
+-- マラソン日記のスキーマ定義（DBFlute ReplaceSchema）
+-- mvn dbflute:replace-schema で既存オブジェクトを削除後、本ファイルの DDL を適用する
+-- 論理設計は kb001_marathon-diary_doc を正とする

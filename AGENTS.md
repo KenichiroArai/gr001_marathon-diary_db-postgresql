@@ -5,45 +5,67 @@ Cursor / Codex / Claude Code など複数ツールで共通利用する。
 
 ## プロジェクト概要
 
-- **役割**: マラソン日記の PostgreSQL DB 定義・マイグレーション
-- **含むもの**: スキーマ、マイグレーション、シード（あれば）、DB 運用スクリプト
-- **含めないもの**: （記入例: アプリのビジネスロジック、API 実装）
+- **役割**: マラソン日記の PostgreSQL DB 定義と DB アクセス（ドメインから受け取ったデータを PostgreSQL に適用する）
+- **含むもの**: スキーマ（ReplaceSchema）、DBFlute 設定・自動生成コード、DB アクセス実装、Docker による DB 環境
+- **含めないもの**: ビジネスロジック（`gr001_marathon-diary_domain`）、HTTP/API 層（`gr001_marathon-diary_api`）、起動クラス
 
 ## 技術スタック
 
-- RDBMS: PostgreSQL
-- 言語 / フレームワーク: （TODO）
-- マイグレーションツール: （TODO）
-- ビルド / パッケージ管理: （TODO）
-- テスト: （TODO）
+- RDBMS: PostgreSQL 18.6（Docker、`docker-compose.yml`）
+- 言語 / フレームワーク: Java 25 / Spring Boot 4.1.1（`spring-boot-starter-jdbc`。Web なし）
+- O/R マッパー: DBFlute 1.3.1（`dbflute-runtime`、`dbflute-maven-plugin` 1.1.0、targetContainer は spring）
+- マイグレーションツール: DBFlute ReplaceSchema（`dbflute_marathondiary/playsql/replace-schema.sql`）
+- ビルド / パッケージ管理: Maven（`spring-boot-starter-parent` 4.1.1、`packaging` jar）
+- 基盤ライブラリ: kmg-core / kmg-fund（常時依存）
+- テスト: JUnit 5（`spring-boot-starter-test`）/ JaCoCo 0.8.14（行・分岐 100%。DBFlute 生成コードは対象外）
 
 ## ディレクトリ構成
 
 ```text
-# TODO: 実際の構成に合わせて更新する
-# migrations/
-# seeds/
-# src/
-# tests/
+docker-compose.yml               # PostgreSQL 18.6
+.env.example                     # Docker の接続設定の雛形（.env は git 管理外）
+dbflute_marathondiary/           # DBFlute クライアント
+  dfprop/                        # DBFlute 設定
+  playsql/replace-schema.sql     # スキーマ定義（DDL）
+mydbflute/                       # DBFlute エンジン（git 管理外）
+src/main/java/kmg/gr/gr001/db/postgresql/
+  dbflute/                       # DBFlute 自動生成コード（手で編集しない。exbhv / exentity 等の拡張クラスは除く）
+src/test/java/kmg/gr/gr001/db/postgresql/
 ```
 
 ## ビルド・テスト
 
 ```bash
-# TODO: 実際のコマンドに置き換える
-# ビルド:
-# テスト:
-# リント:
+# テスト（JaCoCo レポート + カバレッジ 100% チェック）:
+mvn test
+
+# パッケージ（通常 jar）:
+mvn package
 ```
+
+- カバレッジレポート: `target/site/jacoco/index.html`
+- 成果物: `target/gr001_marathon-diary_db-postgresql-0.1.0.jar`（実行可能 fat jar ではない）
 
 ## よく使うコマンド
 
 ```bash
-# TODO: 実際のコマンドに置き換える
-# マイグレーション適用:
-# ロールバック:
-# ローカル起動:
+# ローカル DB 起動 / 停止:
+docker compose up -d
+docker compose down
+
+# DBFlute エンジン取得（初回のみ）:
+mvn dbflute:download
+
+# スキーマ適用（DB を作り直す。確認プロンプトに y で応答。非対話なら echo y | mvn ...）:
+mvn dbflute:replace-schema
+
+# DBFlute のコード生成（JDBC + Generate）:
+mvn dbflute:regenerate
 ```
+
+- `mvn dbflute:generate` 単体はスキーマ情報が無いと失敗する。テーブルが 1 つも無いスキーマでは生成できない
+- DBFlute タスクが失敗しても Maven は `BUILD SUCCESS` を表示する。`[Final Message]` に `*Abort` が無いこと、`dbflute_marathondiary/log/dbflute.log` を確認する
+- 接続設定は `.env`（Docker）と `pom.xml` の `dbflute.database*` プロパティ、`dbflute_marathondiary/dfprop/databaseInfoMap.dfprop` を揃える
 
 ## 作業時の原則
 
