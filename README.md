@@ -14,12 +14,26 @@
 - DB 管理ツール: pgAdmin 4 9.18.0（Docker）
 - 基盤ライブラリ: kmg-core / kmg-fund
 
+## モジュール間の依存関係
+
+```text
+api-boot ──> api ──> domain
+   └──────> db-postgresql（本リポジトリ） ──> domain
+```
+
+- 本リポジトリは domain にだけ依存し、domain の Repository インタフェースを実装する。api の存在は知らない
+- 自動設定（`PostgresqlDbAutoConfiguration`）で Bean を登録するため、起動モジュールは dependency に追加するだけで利用できる
+- DBFlute の Entity / Behavior は Repository 実装の外に出さず、ドメインモデルに変換して返す
+- DataSource（接続先）は起動モジュールの `application.yml` / 環境変数で指定する
+- 別の DB（例: db-mysql）へ切り替える場合は、同じ構成のモジュールを作り、起動モジュールの dependency を差し替える（api-boot の README を参照）
+
 ## 必要環境
 
 - JDK 25
 - Maven 3.6.3 以降
 - Docker（Docker Compose v2）
 - kmg-core / kmg-fund（ローカル `mvn install` または GitHub Packages）
+- `gr001_marathon-diary_domain`（ローカル `mvn install`）
 
 ## セットアップ
 
@@ -36,7 +50,32 @@ mvn dbflute:replace-schema
 
 # 4. DBFlute のコード生成（JDBC でスキーマ情報を取得してから生成。src/main/java/kmg/gr/gr001/db/postgresql/dbflute/ に出力）
 mvn dbflute:regenerate
+
+# 5. テストとローカルリポジトリへのインストール（事前に domain を mvn install しておく）
+mvn install
 ```
+
+非対話で実行する場合は `echo y | mvn dbflute:replace-schema` のように確認プロンプトへ `y` を渡す（PowerShell では `"y" | mvn dbflute:replace-schema`）。
+
+### サンプルテーブル（配線確認用）
+
+`replace-schema.sql` に DB → domain → api → 画面の配線確認用のサンプルテーブルを定義している。
+
+| テーブル | 列 | 内容 |
+| --- | --- | --- |
+| `sample_greeting` | `sample_greeting_id`（BIGINT、IDENTITY、PK） | サンプル挨拶 ID |
+| | `message`（VARCHAR(200)、NOT NULL） | メッセージ |
+
+初期データとして `Hello from sample database` を 1 行投入する。
+取得は `SampleGreetingRepositoryImpl`（ID 昇順の先頭 1 件）が行い、画面のサンプル挨拶パネルに表示される。
+
+メッセージを変える手順:
+
+1. `replace-schema.sql` の `INSERT` 文を編集する（または pgAdmin で `sample_greeting` を直接更新する）
+2. `mvn dbflute:replace-schema` で DB を作り直す
+3. 起動中の API（api-boot）を再起動する必要はない（リクエストごとに DB を参照する）
+
+テーブル定義（列）を変更した場合は `mvn dbflute:regenerate` でコードを再生成し、`mvn install` し直す。
 
 接続先（開発用の既定値）: `jdbc:postgresql://localhost:5432/marathondiary`（ユーザ / パスワード: `marathondiary`）
 
@@ -83,7 +122,11 @@ dbflute_marathondiary/           # DBFlute クライアント
   playsql/replace-schema.sql     # スキーマ定義（DDL）
 mydbflute/                       # DBFlute エンジン（git 管理外）
 src/main/java/kmg/gr/gr001/db/postgresql/
+  config/                        # 自動設定（PostgresqlDbAutoConfiguration）
   dbflute/                       # DBFlute 自動生成コード
+  sample/repository/impl/        # サンプルの Repository 実装（SampleGreetingRepositoryImpl）
+src/main/resources/META-INF/spring/
+  org.springframework.boot.autoconfigure.AutoConfiguration.imports   # 自動設定の登録
 src/test/java/                   # テスト
 ```
 

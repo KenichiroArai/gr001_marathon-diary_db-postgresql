@@ -7,7 +7,10 @@ Cursor / Codex / Claude Code など複数ツールで共通利用する。
 
 - **役割**: マラソン日記の PostgreSQL DB 定義と DB アクセス（ドメインから受け取ったデータを PostgreSQL に適用する）
 - **含むもの**: スキーマ（ReplaceSchema）、DBFlute 設定・自動生成コード、DB アクセス実装、Docker による DB 環境
-- **含めないもの**: ビジネスロジック（`gr001_marathon-diary_domain`）、HTTP/API 層（`gr001_marathon-diary_api`）、起動クラス
+- **含めないもの**: ビジネスロジック（`gr001_marathon-diary_domain`）、HTTP/API 層（`gr001_marathon-diary_api`）、起動クラス（`gr001_marathon-diary_api-boot`）
+- **依存の向き**: 本モジュールは domain にだけ依存し、domain の Repository インタフェースを実装する。api には依存しない
+- **Bean 登録**: `config/PostgresqlDbAutoConfiguration` を `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` に登録し、クラスパスに追加するだけで有効になるようにする
+- **境界**: DBFlute の Entity / ConditionBean / Behavior を Repository 実装の外に出さない（戻り値はドメインモデル）
 
 ## 技術スタック
 
@@ -29,7 +32,11 @@ dbflute_marathondiary/           # DBFlute クライアント
   playsql/replace-schema.sql     # スキーマ定義（DDL）
 mydbflute/                       # DBFlute エンジン（git 管理外）
 src/main/java/kmg/gr/gr001/db/postgresql/
+  config/                        # 自動設定（PostgresqlDbAutoConfiguration）
   dbflute/                       # DBFlute 自動生成コード（手で編集しない。exbhv / exentity 等の拡張クラスは除く）
+  sample/repository/impl/        # サンプル（配線確認用）の Repository 実装
+src/main/resources/META-INF/spring/
+  org.springframework.boot.autoconfigure.AutoConfiguration.imports
 src/test/java/kmg/gr/gr001/db/postgresql/
 ```
 
@@ -371,6 +378,8 @@ public class SampleClass {
 ## 関連リポジトリ
 
 - 仕様: `kb001_marathon-diary_doc`
+- ドメイン（Repository インタフェース）: `gr001_marathon-diary_domain`
+- 起動モジュール: `gr001_marathon-diary_api-boot`
 
 ## 参考リンク
 
