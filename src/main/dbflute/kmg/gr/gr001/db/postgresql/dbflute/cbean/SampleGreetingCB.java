@@ -11,4 +11,6 @@ import kmg.gr.gr001.db.postgresql.dbflute.cbean.bs.BsSampleGreetingCB;
  * @author DBFlute(AutoGenerator)
  */
 public class SampleGreetingCB extends BsSampleGreetingCB {
+
+    // 処理なし
 }

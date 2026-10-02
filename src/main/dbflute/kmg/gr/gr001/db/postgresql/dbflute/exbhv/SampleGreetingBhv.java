@@ -12,4 +12,6 @@ import kmg.gr.gr001.db.postgresql.dbflute.bsbhv.BsSampleGreetingBhv;
  */
 @org.springframework.stereotype.Component("sampleGreetingBhv")
 public class SampleGreetingBhv extends BsSampleGreetingBhv {
+
+    // 処理なし
 }

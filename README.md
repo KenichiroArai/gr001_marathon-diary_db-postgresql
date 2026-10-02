@@ -48,7 +48,7 @@ mvn dbflute:download
 # 3. スキーマ適用（dbflute_marathondiary/playsql/replace-schema.sql。確認プロンプトに y で応答）
 mvn dbflute:replace-schema
 
-# 4. DBFlute のコード生成（JDBC でスキーマ情報を取得してから生成。src/main/java/kmg/gr/gr001/db/postgresql/dbflute/ に出力）
+# 4. DBFlute のコード生成（JDBC でスキーマ情報を取得してから生成。src/main/dbflute/kmg/gr/gr001/db/postgresql/dbflute/ に出力）
 mvn dbflute:regenerate
 
 # 5. テストとローカルリポジトリへのインストール（事前に domain を mvn install しておく）
@@ -56,6 +56,25 @@ mvn install
 ```
 
 非対話で実行する場合は `echo y | mvn dbflute:replace-schema` のように確認プロンプトへ `y` を渡す（PowerShell では `"y" | mvn dbflute:replace-schema`）。
+
+### DBFlute 生成コードのソースフォルダ
+
+DBFlute の生成コードは、手書きのコード（`src/main/java`）と分けて `src/main/dbflute` に出力する（`dbflute_marathondiary/dfprop/basicInfoMap.dfprop` の `generateOutputDirectory`）。
+`src/main/dbflute` は `pom.xml` の `build-helper-maven-plugin` でソースフォルダとして登録している。パッケージ名は `kmg.gr.gr001.db.postgresql.dbflute` のまま。
+
+- 拡張クラス（`exbhv` / `exentity` / `cbean` 直下など）を含め、`src/main/dbflute` 配下には独自ロジックを書かない
+- DB アクセスの独自処理は Repository 実装（`src/main/java` 側）に書く
+
+### Eclipse の設定
+
+生成コードは Eclipse のコンパイラ警告・エラーのルールに合わないため、`src/main/dbflute` だけ「任意のコンパイル問題を無視」にする。
+この設定は `.classpath` に保存し、Git で管理している。
+
+「Maven」→「プロジェクトの更新」を実行すると設定が外れることがあるため、実行後は次の手順で確認する。
+
+1. 「プロパティ」→「Java のビルド・パス」→「ソース」で `src/main/dbflute` を展開し、「任意のコンパイル問題を無視」が「はい」になっていることを確認する（外れていれば「はい」に戻す）
+2. 問題ビューから DBFlute 関連の警告・エラーが消えたこと、`config/` と `sample/` には従来どおりルールが効いていることを確認する
+3. `.classpath` に差分が出ていないことを確認する（差分が出た場合は意図した変更か確認してからコミットする）
 
 ### サンプルテーブル（配線確認用）
 
@@ -123,8 +142,9 @@ dbflute_marathondiary/           # DBFlute クライアント
 mydbflute/                       # DBFlute エンジン（git 管理外）
 src/main/java/kmg/gr/gr001/db/postgresql/
   config/                        # 自動設定（PostgresqlDbAutoConfiguration）
-  dbflute/                       # DBFlute 自動生成コード
   sample/repository/impl/        # サンプルの Repository 実装（SampleGreetingRepositoryImpl）
+src/main/dbflute/kmg/gr/gr001/db/postgresql/
+  dbflute/                       # DBFlute 自動生成コード（拡張クラスを含む）
 src/main/resources/META-INF/spring/
   org.springframework.boot.autoconfigure.AutoConfiguration.imports   # 自動設定の登録
 src/test/java/                   # テスト

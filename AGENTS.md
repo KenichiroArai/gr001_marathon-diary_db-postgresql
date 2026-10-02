@@ -33,8 +33,9 @@ dbflute_marathondiary/           # DBFlute クライアント
 mydbflute/                       # DBFlute エンジン（git 管理外）
 src/main/java/kmg/gr/gr001/db/postgresql/
   config/                        # 自動設定（PostgresqlDbAutoConfiguration）
-  dbflute/                       # DBFlute 自動生成コード（手で編集しない。exbhv / exentity 等の拡張クラスは除く）
   sample/repository/impl/        # サンプル（配線確認用）の Repository 実装
+src/main/dbflute/kmg/gr/gr001/db/postgresql/
+  dbflute/                       # DBFlute 自動生成コード（拡張クラスを含め、手で編集しない）
 src/main/resources/META-INF/spring/
   org.springframework.boot.autoconfigure.AutoConfiguration.imports
 src/test/java/kmg/gr/gr001/db/postgresql/
@@ -73,6 +74,14 @@ mvn dbflute:regenerate
 - `mvn dbflute:generate` 単体はスキーマ情報が無いと失敗する。テーブルが 1 つも無いスキーマでは生成できない
 - DBFlute タスクが失敗しても Maven は `BUILD SUCCESS` を表示する。`[Final Message]` に `*Abort` が無いこと、`dbflute_marathondiary/log/dbflute.log` を確認する
 - 接続設定は `.env`（Docker）と `pom.xml` の `dbflute.database*` プロパティ、`dbflute_marathondiary/dfprop/databaseInfoMap.dfprop` を揃える
+
+## DBFlute 生成コードの扱い
+
+- 生成コードは `src/main/dbflute` に出力する（`basicInfoMap.dfprop` の `generateOutputDirectory`）。`pom.xml` の `build-helper-maven-plugin` でソースフォルダとして登録している
+- パッケージ名は `kmg.gr.gr001.db.postgresql.dbflute` のまま。`src/main/java` に `dbflute` パッケージを作らない
+- 拡張クラス（`exbhv` / `exentity` / `cbean` 直下など）にも独自ロジックを書かない。DB アクセスの独自処理は Repository 実装に書く
+- 本ドキュメントのコーディングルール・Javadoc ルールは `src/main/dbflute` には適用しない
+- Eclipse では `src/main/dbflute` だけ「任意のコンパイル問題を無視」を「はい」にする（設定は Git 管理している `.classpath` に保存する。「Maven」→「プロジェクトの更新」で外れることがあるため、手順は README を参照）
 
 ## 作業時の原則
 

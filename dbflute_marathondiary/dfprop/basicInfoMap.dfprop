@@ -107,7 +107,7 @@ map:{
     #     [app-solution]/source/[app-project(top-namespace)]/[part-namespace]/...
     #     [app-solution]/source/[app-project(top-namespace)]/Resources/...
     #
-    ; generateOutputDirectory = ../src/main/java
+    ; generateOutputDirectory = ../src/main/dbflute
     # - - - - - - - - - -/
 
     # /- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
